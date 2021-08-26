@@ -49,7 +49,8 @@ owner = payable(eoa);
 vaultStatus = VState.Open; /*2. Vault Status defaults to OPEN*/
 VaultBidsStatus = BState.NoBids; // vault has no bids; 
 numLiveBids = 0;
-debt = 1; // it should be 0 but using 1 as a fixed fee for testing 
+debt = 1; // Constructed with 1 on purpose to simulate interest. 
+            // use debt = debt + loan; make sure to payback more than loaned
 
 }
 
@@ -125,15 +126,24 @@ return(true);
 }
 }
 
-// For Testing
+// Test 
+// Success: 
+   // Uses the two internal Force functions and passes the debt state variable, which is 1 when constructed.  
+function TestLiquidationEligible() external returns(bool){ 
+forceLoanOutStanding();
+forceBidsExpired();
+CheckLiquidationEligible(debt);
+if(vaultStatus == VState.LiquidationEligible){ 
+   return(true);
+} else return(false);
+}
 
-function forceLoanOutStanding() public { 
+function forceLoanOutStanding() internal { 
 vaultStatus = VState.LoanOutstanding;
 }
-function forceBidsExpired() public { 
+function forceBidsExpired() internal { 
    VaultBidsStatus = BState.AllBidsExpired;
 }
-
 
 /*17. Bidder can request withdraw of their money
 @ Josh - this needs to check their bid, if its expired or not (can't withdraw early)
