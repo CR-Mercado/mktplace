@@ -44,9 +44,10 @@ uint public numLiveBids;
 // for when user takes loans
 uint public debt;
 
+/*2. Vault Status defaults to OPEN*/
 constructor(address eoa){ 
 owner = payable(eoa); 
-vaultStatus = VState.Open; /*2. Vault Status defaults to OPEN*/
+vaultStatus = VState.Open; 
 VaultBidsStatus = BState.NoBids; // vault has no bids; 
 numLiveBids = 0;
 debt = 1; // Constructed with 1 on purpose to simulate interest. 
@@ -145,21 +146,24 @@ function forceBidsExpired() internal {
    VaultBidsStatus = BState.AllBidsExpired;
 }
 
+
+
 /*17. Bidder can request withdraw of their money
 @ Josh - this needs to check their bid, if its expired or not (can't withdraw early)
 */
+function bidWithdraw() public {
 
 /*18. Withdrawal request: Check if Bid expire time has passed 
 @ Josh - this needs to check their bid, if its expired or not (can't withdraw early)
 */
 
-/*19. Withdrawal request: check if Vault should be liquidated 
-@ Josh/Carlos 
-*/
 
-/*20. If Loan Outstanding - Vault is LIQUIDATION ELIGIBLE
- @Josh/Carlos
- */
+/*19. Withdrawal request: check if Vault should be liquidated 
+  20. If Loan Outstanding - Vault is LIQUIDATION ELIGIBLE */
+CheckLiquidationEligible(debt);
+
+}
+
 
 /*21. If Bidder is HIGHEST LIVE BID & LIQUIDATION ELIGIBLE do NOT withdraw, instead transfer Vault
 @ Josh - this needs to check their bid, if its expired or not (can't withdraw early)
