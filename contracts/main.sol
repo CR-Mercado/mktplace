@@ -7,7 +7,7 @@ contract VaultCreator {
 
 address public MktplaceAdmin;  // public state variable automatically has getter function 
   Vault[] public deployedVaults; // public array automatically has getter function 
-  
+
   constructor(){ 
    MktplaceAdmin = msg.sender; //  Contract Administrator, not new Vault owner   
   }
@@ -17,6 +17,13 @@ address public MktplaceAdmin;  // public state variable automatically has getter
     Vault new_vault_address = new Vault(msg.sender); // pass caller to Vault constructor as eoa; makes them owner of a their Vault 
     deployedVaults.push(new_vault_address); // track these Vaults
   } 
+
+// Carlos: made this, but not sure if we'll need it, was trying to test something 
+modifier OnlyMktplaceAdmin() { 
+       require(msg.sender == MktplaceAdmin, "Only Mktplace Administrators can use this function");
+       _; 
+     } 
+
 }
 
 contract Vault { 
@@ -34,12 +41,16 @@ BState public VaultBidsStatus;
 //increment this when bids come in and when withdraws happen 
 uint public numLiveBids;
 
+// for when user takes loans
+uint public debt;
 
 constructor(address eoa){ 
 owner = payable(eoa); 
 vaultStatus = VState.Open; /*2. Vault Status defaults to OPEN*/
 VaultBidsStatus = BState.NoBids; // vault has no bids; 
 numLiveBids = 0;
+debt = 1; // it should be 0 but using 1 as a fixed fee for testing 
+
 }
 
 // } I put this at the bottom of the script for now. 
@@ -93,33 +104,36 @@ should bid be a struct?
 @ Maks - user can submit ETH to the contract 
 */
 
-/*15. Check if User paid in full 
-@ Carlos - function that only changes Loan Outstanding -> Published IF debt == 0 
-*/
-
+/*15. Check if User paid in full*/
 // function is internal, only called by other functions in this contract
 // assumes debt is stored & calculated at loan withdrawal & repayment ** <- discuss with Vivien (13)
 // if there's no debt, then this closes the loan, makes the State Published, 
 //    and returns FALSE (not Liquidation Eligible)
 // if there is debt - and for this POC all Bids are expired- then it can be liquidated  
-function CheckLiquidationEligible(uint debt) internal { 
+
+function CheckLiquidationEligible(uint _debt) public returns(bool){ 
 require(vaultStatus == VState.LoanOutstanding, "No loans outstanding on this vault.");
 require(VaultBidsStatus == BState.AllBidsExpired, "At least one bid is still providing collateral.");
 
-if( debt == 0 ){ 
-vault.Status = State.Published;
-return(FALSE)
-} 
-
-// 
-
+/*16. If paid in full Vault Status is PUBLISHED */
+if( _debt == 0 ){ 
+vaultStatus = VState.Published;
+return(false);
+} else { 
+vaultStatus = VState.LiquidationEligible;
+return(true);
+}
 }
 
+// For Testing
 
+function forceLoanOutStanding() public { 
+vaultStatus = VState.LoanOutstanding;
+}
+function forceBidsExpired() public { 
+   VaultBidsStatus = BState.AllBidsExpired;
+}
 
-/*16. If paid in full Vault Status is PUBLISHED
-@ Carlos - function that only changes Loan Outstanding -> Published IF debt == 0 
-*/
 
 /*17. Bidder can request withdraw of their money
 @ Josh - this needs to check their bid, if its expired or not (can't withdraw early)
