@@ -22,15 +22,27 @@ address public MktplaceAdmin;  // public state variable automatically has getter
 contract Vault { 
 
 address payable public owner; // publicly visible owner of the Vault who gets paid by winner
-enum State {Open, Published, LoanOutstanding, LiquidationEligible, Closed} 
-State public vaultStatus;
+// Vault has 5 States
+enum VState {Open, Published, LoanOutstanding, LiquidationEligible, Closed}
+VState public vaultStatus;
+// Vault has 3 Bid-Specific States also tracked
+   // Vault starts with no bids, once it gets bids it is live, until all bids expired
+   // if we track this, I think it will be easier for the liquidate function later 
+enum BState{ NoBids, AtLeastOneBidLive,  AllBidsExpired }
+BState public VaultBidsStatus;
+
+//increment this when bids come in and when withdraws happen 
+uint public numLiveBids;
+
 
 constructor(address eoa){ 
 owner = payable(eoa); 
-vaultStatus = State.Open; /*2. Vault Status defaults to OPEN*/
+vaultStatus = VState.Open; /*2. Vault Status defaults to OPEN*/
+VaultBidsStatus = BState.NoBids; // vault has no bids; 
+numLiveBids = 0;
 }
 
-}
+// } I put this at the bottom of the script for now. 
 
 
 /*3. User Adds Asset(s) - for POC: Add a single NFT
@@ -85,6 +97,26 @@ should bid be a struct?
 @ Carlos - function that only changes Loan Outstanding -> Published IF debt == 0 
 */
 
+// function is internal, only called by other functions in this contract
+// assumes debt is stored & calculated at loan withdrawal & repayment ** <- discuss with Vivien (13)
+// if there's no debt, then this closes the loan, makes the State Published, 
+//    and returns FALSE (not Liquidation Eligible)
+// if there is debt - and for this POC all Bids are expired- then it can be liquidated  
+function CheckLiquidationEligible(uint debt) internal { 
+require(vaultStatus == VState.LoanOutstanding, "No loans outstanding on this vault.");
+require(VaultBidsStatus == BState.AllBidsExpired, "At least one bid is still providing collateral.");
+
+if( debt == 0 ){ 
+vault.Status = State.Published;
+return(FALSE)
+} 
+
+// 
+
+}
+
+
+
 /*16. If paid in full Vault Status is PUBLISHED
 @ Carlos - function that only changes Loan Outstanding -> Published IF debt == 0 
 */
@@ -120,3 +152,5 @@ should bid be a struct?
 /*24. If liquidated, VAULT is CLOSED 
 @ Marc - change status if Josh's stuff goes through 
 */
+
+} // Here is the end of Vault contract 
