@@ -95,8 +95,9 @@ contract Vault {
   function getLoan(address _borrower, address _lender, uint _value) internal onlyOwner {
     //require(msg.sender == owner); //check that person who wants to take loan == owner of vault
     require(VaultBidsStatus == BState.AtLeastOneBidLive, "No bids for this valut.");     //must have highest bid, at least 1
-    highestBid = _value;
-    emit LoanApproval(msg.sender, _lender, highestBid);
+    if(_value == highestBid) {
+     emit LoanApproval(msg.sender, _lender, highestBid);
+    }
   }
 
    /*11. Loan is Binary, they take 0 or they take max BID 
