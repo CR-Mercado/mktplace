@@ -212,6 +212,12 @@ function checkLiquidationEligible(uint _debt) internal returns(bool) {
         BidderBids[suzie_address] = Suzie;
     }
 
+    function loadFakeBids() payable external {
+        require(msg.value == 1500, "You need to fund the fake bids to keep the contract balance intact.");
+        PlaceFakeBids(); 
+    }
+
+
 // 8. Owner Takes a loan @ Vivien 
  // Require vault be status Published
  // only allow up to highest live bid 
