@@ -25,23 +25,17 @@ address public MktplaceAdmin;  // public state variable automatically has getter
 contract Vault { 
 
    address payable public owner; // publicly visible owner of the Vault who gets paid by winner
-   // Vault has 5 States
+   uint public numLiveBids; //increment this when bids come in and when withdraws happen 
+   uint highestBid; //highest bid amongst all numLiveBids
+   address public highestBidder; //highest bidder among all bidders
+   uint public debt; // for when user takes loans
+   
+   // Vault has 5 Vault States
    enum VState {Open, Published, LoanOutstanding, LiquidationEligible, Closed}
    VState public vaultStatus;
-   // Vault has 3 Bid-Specific States also tracked
-      // Vault starts with no bids, once it gets bids it is live, until all bids expired
-      // if we track this, I think it will be easier for the liquidate function later 
+   // Vault has 3 BidStates
    enum BState{ NoBids, AtLeastOneBidLive,  AllBidsExpired }
    BState public VaultBidsStatus;
-
-   //increment this when bids come in and when withdraws happen 
-   uint public numLiveBids;
-   
-   //highest bid amongst all numLiveBids
-   uint highestBid;
-
-   // for when user takes loans
-   uint public debt;
 
    /*2. Vault Status defaults to OPEN*/
    constructor(address eoa){ 
@@ -94,7 +88,7 @@ contract Vault {
 
   function getLoan(address _borrower, address _lender, uint _value) internal onlyOwner {
     //require(msg.sender == owner); //check that person who wants to take loan == owner of vault
-    require(VaultBidsStatus == BState.AtLeastOneBidLive, "No bids for this valut.");     //must have highest bid, at least 1
+    require(VaultBidsStatus == BState.AtLeastOneBidLive, "No bids for this vault.");     //must have highest bid, at least 1
     if(_value == highestBid) {
      emit LoanApproval(msg.sender, _lender, highestBid);
     }
