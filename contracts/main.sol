@@ -33,18 +33,19 @@ contract Vault {
    // Vault has 5 Vault States
    enum VState {Open, Published, LoanOutstanding, LiquidationEligible, Closed}
    VState public vaultStatus;
-   // Vault has 3 BidStates
-   enum BState{ NoBids, AtLeastOneBidLive,  AllBidsExpired }
-   BState public VaultBidsStatus;
-
+  
    /*2. Vault Status defaults to OPEN*/
    constructor(address eoa){ 
       owner = payable(eoa); 
       vaultStatus = VState.Open; 
-      VaultBidsStatus = BState.NoBids; // vault has no bids; 
       numLiveBids = 0;
       debt = 1; // Constructed with 1 on purpose to simulate interest. 
                   // use debt = debt + loan; make sure to payback more than loaned
+   }
+
+  modifier OnlyOwner {
+    require(msg.sender == owner, "Only the vault owner can call this function.");
+    _;
    }
 
    /*3. User Adds Asset(s) - for POC: Add a single NFT
@@ -79,16 +80,21 @@ contract Vault {
    @ Vivien - User requests loan, check if bids exist, give them highest live bid, change vault to loan outstanding
    */
   
+  // normally would use uint _amount but we will assume they take the max for the proof of concept
+function requestLoan() external OnlyOwner { 
+require(vaultStatus == VState.Published, "Only published vaults can take loans");
+
+
+}
+
+
+
   event LoanApproval(address indexed _borrower, address indexed _lender, uint indexed _value);
   
-  modifier onlyOwner {
-    require(msg.sender == owner, "Only the vault owner can call this function.");
-    _;
-   }
 
   function getLoan(address _borrower, address _lender, uint _value) internal onlyOwner {
     //require(msg.sender == owner); //check that person who wants to take loan == owner of vault
-    require(VaultBidsStatus == BState.AtLeastOneBidLive, "No bids for this vault.");     //must have highest bid, at least 1
+
     if(_value == highestBid) {
      emit LoanApproval(msg.sender, _lender, highestBid);
     }
@@ -102,14 +108,19 @@ contract Vault {
    @ Vivien - User requests loan, check if bids exist, give them highest live bid, change vault to loan outstanding
    */
   //event Transfer(address indexed _lender, address indexed _borrower, uint indexed _value);  
-  function transferLoan(address payable account) payable public onlyOwner {
+  function transferLoan(address payable _account, uint _amount) payable public onlyOwner {
     require(vaultStatus == VState.Published, "Only published vaults with bids can take loans.");
-    require(VaultBidsStatus == BState.AtLeastOneBidLive, "No bid collateral available.");
-    debt += msg.value;
-    address(account).transfer(msg.value);
+   
+    recipient = payable(_account);
+    debt += _amount;
+    // debt += msg.value; - It won't be msg.value, this is a request for money, not a deposit.
+
+    vaultStatus = VState.LoanOutstanding;
     
     //emit Transfer(_lender, _borrower, highestBid);
-    vaultStatus = VState.LoanOutstanding;
+    
+    address(recipient).transfer(msg.value);
+
   }
 
    /*13. User receives loan
@@ -129,7 +140,6 @@ contract Vault {
 
    function CheckLiquidationEligible(uint _debt) public returns(bool) { 
       require(vaultStatus == VState.LoanOutstanding, "No loans outstanding on this vault.");
-      require(VaultBidsStatus == BState.AllBidsExpired, "At least one bid is still providing collateral.");
 
       /*16. If paid in full Vault Status is PUBLISHED */
       if( _debt == 0 ){ 
@@ -146,7 +156,6 @@ contract Vault {
       // Uses the two internal Force functions and passes the debt state variable, which is 1 when constructed.  
    function TestLiquidationEligible() external returns(bool) { 
       forceLoanOutStanding();
-      forceBidsExpired();
       CheckLiquidationEligible(debt);
       if(vaultStatus == VState.LiquidationEligible){ 
          return(true);
@@ -156,9 +165,6 @@ contract Vault {
 
    function forceLoanOutStanding() internal { 
       vaultStatus = VState.LoanOutstanding;
-   }
-   function forceBidsExpired() internal { 
-      VaultBidsStatus = BState.AllBidsExpired;
    }
 
    /*17. Bidder can request withdraw of their money
