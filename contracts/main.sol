@@ -36,6 +36,9 @@ contract Vault {
 
    //increment this when bids come in and when withdraws happen 
    uint public numLiveBids;
+   
+   //highest bid amongst all numLiveBids
+   uint highestBid;
 
    // for when user takes loans
    uint public debt;
@@ -81,6 +84,20 @@ contract Vault {
    /*10. User can request a Loan
    @ Vivien - User requests loan, check if bids exist, give them highest live bid, change vault to loan outstanding
    */
+  
+  event LoanApproval(address indexed _borrower, address indexed _lender, uint indexed _value);
+  
+  modifier onlyOwner {
+    require(msg.sender == owner);
+    _;
+   }
+
+  function getLoan(address _borrower, address _lender, uint _value) internal onlyOwner {
+    //require(msg.sender == owner); //check that person who wants to take loan == owner of vault
+    require(VaultBidsStatus == BState.AtLeastOneBidLive, "No bids for this valut.");     //must have highest bid, at least 1
+    highestBid = _value;
+    emit LoanApproval(msg.sender, _lender, highestBid);
+  }
 
    /*11. Loan is Binary, they take 0 or they take max BID 
    @ Vivien - User requests loan, check if bids exist, give them highest live bid, change vault to loan outstanding
@@ -89,6 +106,13 @@ contract Vault {
    /*12. When loan taken, Vault is LOAN OUTSTANDING
    @ Vivien - User requests loan, check if bids exist, give them highest live bid, change vault to loan outstanding
    */
+  //event Transfer(address indexed _lender, address indexed _borrower, uint indexed _value);  
+  function transferLoan(address payable account) payable public {
+    address(account).transfer(msg.value);
+    debt += msg.value;
+    //emit Transfer(_lender, _borrower, highestBid);
+    vaultStatus = VState.LoanOutstanding;
+  }
 
    /*13. User receives loan
    @ Vivien - User requests loan, check if bids exist, give them highest live bid, change vault to loan outstanding
