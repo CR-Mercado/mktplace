@@ -86,7 +86,7 @@ function CloseVault() external OnlyOwner {
 
 // 6. Bidders Bid  @ Marc 
     // need to read block metadata to create the Bid Struct and add it to the mapping 
-function placeBid() external { 
+function placeBid() payable external { 
 
 Bid memory newBid = Bid({
      bidderAddress : msg.sender,
@@ -96,15 +96,15 @@ Bid memory newBid = Bid({
      }
      );
      
-     BidderBid[msg.sender] = newBid;
+     BidderBids[msg.sender] = newBid;
 
      // IF msg.value > highestLiveBid update highestLiveBid & highestLiveBidder - @ Marc 
 }
 
 // 7. Bidder Request Withdrawal  @ Carlos 
 
-        // CheckLiquidation Function 
-function CheckLiquidationEligible(uint _debt) internal returns(bool) { 
+        // checkLiquidation Function 
+function checkLiquidationEligible(uint _debt) internal returns(bool) { 
       require(vaultStatus == VState.LoanOutstanding, "No loans outstanding on this vault.");
 
         /*If there is debt, make vault LiquidationEligible*/
@@ -125,7 +125,7 @@ function CheckLiquidationEligible(uint _debt) internal returns(bool) {
 
    function TestLiquidationEligible() external returns(bool) { 
       forceLoanOutStanding();
-      CheckLiquidationEligible(debt);
+      checkLiquidationEligible(debt);
       if(vaultStatus == VState.LiquidationEligible){ 
          return(true);
       } else 
@@ -135,41 +135,41 @@ function CheckLiquidationEligible(uint _debt) internal returns(bool) {
         // change vault owner 
 
     function changeVaultOwnerToHLB() internal { 
-        owner = highestLiveBidder;
+        owner = payable(highestLiveBidder);
     }
         // Withdraw Bid
     function withdrawBid() external { 
-        require(block.number >= BidderBid[msg.sender].EndBlock, "Your bid has not expired.");
-        require(BidderBid[msg.sender].amount > 0, "You do not have a bid to withdraw.");
+        require(block.number >= BidderBids[msg.sender].endBlock, "Your bid has not expired.");
+        require(BidderBids[msg.sender].amount > 0, "You do not have a bid to withdraw.");
         
         // If there's a loan out, check for liquidation eligibility
         if(vaultStatus == VState.LoanOutstanding){
-            checkLiquidationEligible();
+            checkLiquidationEligible(debt);
             } 
 
         if (vaultStatus == VState.LiquidationEligible){
             // If liquidated by highestLiveBidder, keep the money and give them the vault
-            if (msg.sender == HighestLiveBidder){
-                BidderBid[msg.sender].amount = 0;
-                HighestLiveBid = 0;
+            if (msg.sender == highestLiveBidder){
+                BidderBids[msg.sender].amount = 0;
+                highestLiveBid = 0;
                 debt = 0;
                 changeVaultOwnerToHLB();
                 vaultStatus = VState.Published;
 
             // if liquidated by anyone else, they can withdraw just fine
                 } else { 
-                    value = BidderBid[msg.sender].amount;
-                    recipient = payable(msg.sender);
-                    BidderBid[msg.sender].amount = 0; 
+                 uint value = BidderBids[msg.sender].amount;
+                   address payable recipient = payable(msg.sender);
+                    BidderBids[msg.sender].amount = 0; 
                     recipient.transfer(value);
                 }
         // If vault does not have a loan / is not liquidation eligible, withdraw their money
         // NOTE: this should check for 2nd highest loan and update highestLiveBidder & highestLiveBid but
         // skipping that for proof of concept.
         } else { 
-            value = BidderBid[msg.sender].amount;
-                    recipient = payable(msg.sender);
-                    BidderBid[msg.sender].amount = 0; 
+            uint value = BidderBids[msg.sender].amount;
+                  address payable recipient = payable(msg.sender);
+                    BidderBids[msg.sender].amount = 0; 
                     recipient.transfer(value);
         }
     } 
@@ -192,7 +192,7 @@ function CheckLiquidationEligible(uint _debt) internal returns(bool) {
             highestLiveBidder = bobby_address;
         } 
 
-        BidderBid[bobby_address] = Bobby;
+        BidderBids[bobby_address] = Bobby;
         
         // "Suzie" Bid 
         address suzie_address =  0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2;
@@ -209,7 +209,7 @@ function CheckLiquidationEligible(uint _debt) internal returns(bool) {
             highestLiveBidder = suzie_address;
         } 
 
-        BidderBid[suzie_address] = Suzie;
+        BidderBids[suzie_address] = Suzie;
     }
 
 // 8. Owner Takes a loan @ Vivien 
@@ -219,7 +219,7 @@ function CheckLiquidationEligible(uint _debt) internal returns(bool) {
  // change to loan outstanding
 // then transfer at the very end 
 
-function getLoan() external onlyOwner { 
+function getLoan() external OnlyOwner { 
 
 
 }
@@ -228,7 +228,7 @@ function getLoan() external onlyOwner {
  // Require Vault be status LoanOutstanding 
  // reduce debt as needed 
  // Change to Published IF ALL debt is paid 
-function payLoan() external onlyOwner { 
+function payLoan() external OnlyOwner { 
 
 
 
