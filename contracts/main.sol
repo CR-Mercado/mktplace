@@ -4,7 +4,7 @@
 contract VaultCreator { 
 
 address public MktplaceAdmin;  // public state variable automatically has getter function 
-   Vault[] public deployedVaults; // public array automatically has getter function 
+Vault[] public deployedVaults; // public array automatically has getter function 
    
    constructor(){ 
      MktplaceAdmin = msg.sender; //  Contract Administrator, not new Vault owner   
@@ -29,7 +29,7 @@ contract Vault {
    uint highestBid; //highest bid amongst all numLiveBids
    address public highestBidder; //highest bidder among all bidders
    uint public debt; // for when user takes loans
-   
+
    // Vault has 5 Vault States
    enum VState {Open, Published, LoanOutstanding, LiquidationEligible, Closed}
    VState public vaultStatus;
@@ -82,7 +82,7 @@ contract Vault {
   event LoanApproval(address indexed _borrower, address indexed _lender, uint indexed _value);
   
   modifier onlyOwner {
-    require(msg.sender == owner);
+    require(msg.sender == owner, "Only the vault owner can call this function.");
     _;
    }
 
@@ -102,9 +102,12 @@ contract Vault {
    @ Vivien - User requests loan, check if bids exist, give them highest live bid, change vault to loan outstanding
    */
   //event Transfer(address indexed _lender, address indexed _borrower, uint indexed _value);  
-  function transferLoan(address payable account) payable public {
-    address(account).transfer(msg.value);
+  function transferLoan(address payable account) payable public onlyOwner {
+    require(vaultStatus == VState.Published, "Only published vaults with bids can take loans.");
+    require(VaultBidsStatus == BState.AtLeastOneBidLive, "No bid collateral available.");
     debt += msg.value;
+    address(account).transfer(msg.value);
+    
     //emit Transfer(_lender, _borrower, highestBid);
     vaultStatus = VState.LoanOutstanding;
   }
