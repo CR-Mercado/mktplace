@@ -4,11 +4,15 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
-contract Vault is IERC721Receiver {
+
+  contract Vault is IERC721Receiver {
     address payable public owner; // publicly visible owner of the Vault who gets paid by winner
     uint256 highestLiveBid;
     address public highestLiveBidder; //highest bidder among all bidders
     uint256 public debt; // for when user takes loans
+    ERC721 public nftAddress;
+    uint256 public tokenId;
+
 
     struct Bid {
         address bidderAddress;
@@ -47,13 +51,13 @@ contract Vault is IERC721Receiver {
     // 2. Add Assets @ Maks
     // Backup plan: write this so that vault owner can add ETH
 
-    function AddAsset(address _nftAddress, uint256 _id) external override onlyOwner {
-        ERC721 nftAddress = _nftAddress; 
-        _nftAddress.safeTransferFrom(msg.sender, address(this), _id);
+    function AddAsset(address _nftAddress, uint256 _id) external OnlyOwner {
+        ERC721 nftAddress = ERC721(_nftAddress); 
+        nftAddress.safeTransferFrom(msg.sender, address(this), _id);
     }
 
-   /* function onERC721Received (
-     // address _operator,
+    function onERC721Received (
+      address _operator,
         address _from,
       uint256 _tokenId,
       bytes calldata _data
@@ -62,13 +66,14 @@ contract Vault is IERC721Receiver {
       tokenId = _tokenId;
       return 0x150b7a02;
     }
-    */
+
 
     // 3. Owner Withdraw Assets    @ Maks
     // Should work if Vault is OPEN or CLOSED
 
     function WithdrawAsset(address _nftAddress, uint256 _id) external OnlyOwner {
-      nftAddress.safeTransferFrom(address(this), msg.sender, _id);
+      ERC721 THEnftAddress = ERC721(_nftAddress);
+      THEnftAddress.safeTransferFrom(address(this), msg.sender, _id);
     }
 
     // 4.  Publish Vault  @ Josh
