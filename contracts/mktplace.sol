@@ -235,7 +235,34 @@ contract Vault {
     // change to loan outstanding
     // then transfer at the very end
 
-    function getLoan() external OnlyOwner {}
+    event LoanTransferred(
+        address indexed _borrower,
+        address indexed _lender,
+        uint256 indexed _value
+    );
+
+    function getLoan() external OnlyOwner {
+        
+        require(
+            vaultStatus == VState.Published,
+            "Only published vaults can take loans."
+        );
+        
+        require(
+            highestLiveBid != 0,
+            "There are no bids for your vault."
+        );
+        
+        //update statuses
+        debt += highestLiveBid;
+        vaultStatus = VState.LoanOutstanding;
+
+        //transfer loan
+        address payable recipient = payable(msg.sender);
+        recipient.transfer(highestLiveBid);
+        
+        emit LoanTransferred(msg.sender, highestLiveBidder, highestLiveBid);
+    }
 
     // 9. Owner Pays loan - @ Marc
     // Require Vault be status LoanOutstanding
