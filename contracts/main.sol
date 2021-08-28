@@ -109,7 +109,7 @@ contract Vault {
         address _borrower,
         address _lender,
         uint256 _value
-    ) internal onlyOwner {
+    ) internal OnlyOwner {
         //require(msg.sender == owner); //check that person who wants to take loan == owner of vault
 
         if (_value == highestBid) {
@@ -128,7 +128,7 @@ contract Vault {
     function transferLoan(address payable _account, uint256 _amount)
         public
         payable
-        onlyOwner
+        OnlyOwner
     {
         require(
             vaultStatus == VState.Published,
