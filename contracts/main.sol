@@ -135,7 +135,7 @@ contract Vault {
             "Only published vaults with bids can take loans."
         );
 
-        recipient = payable(_account);
+        // recipient = payable(_account); // commenting out so it compiles - Josh
         debt += _amount;
         // debt += msg.value; - It won't be msg.value, this is a request for money, not a deposit.
 
@@ -143,7 +143,7 @@ contract Vault {
 
         //emit Transfer(_lender, _borrower, highestBid);
 
-        address(recipient).transfer(msg.value);
+        // address(recipient).transfer(msg.value); // commenting out so it compiles - Josh
     }
 
     /*13. User receives loan
