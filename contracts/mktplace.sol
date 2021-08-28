@@ -1,11 +1,16 @@
 //SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.0;
 
-contract Vault {
+import "https://github.com/0xcert/ethereum-erc721/src/contracts/tokens/erc721-token-receiver.sol";
+
+contract Vault is ERC721TokenReceiver {
     address payable public owner; // publicly visible owner of the Vault who gets paid by winner
     uint256 highestLiveBid;
     address public highestLiveBidder; //highest bidder among all bidders
     uint256 public debt; // for when user takes loans
+    ERC721 public nftAddress;
+    uint256 public tokenId;
+
     struct Bid {
         address bidderAddress;
         uint256 startBlock;
@@ -42,7 +47,16 @@ contract Vault {
 
     // 2. Add Assets @ Maks
     // Backup plan: write this so that vault owner can add ETH
-    function AddAsset() external payable OnlyOwner {}
+    function onERC721Received(
+      address _operator,
+      address _from,
+      uint256 _tokenId,
+      bytes calldata _data
+    ) external overrride returns (bytes4) {
+      nftAddress = ERC721(msg.sender);
+      tokenId = _tokenId;
+      return 0x150b7a02;
+    }
 
     // 3. Owner Withdraw Assets    @ Maks
     // Should work if Vault is OPEN or CLOSED
