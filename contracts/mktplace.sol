@@ -52,7 +52,7 @@ contract Vault is IERC721Receiver {
       address _from,
       uint256 _tokenId,
       bytes calldata _data
-    ) external returns (bytes4) {
+    ) external override returns (bytes4) {
       nftAddress = msg.sender;
       tokenId = _tokenId;
       return 0x150b7a02;
