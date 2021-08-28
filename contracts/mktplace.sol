@@ -9,7 +9,7 @@ contract Vault is IERC721Receiver {
     uint256 highestLiveBid;
     address public highestLiveBidder; //highest bidder among all bidders
     uint256 public debt; // for when user takes loans
-    address public nftAddress;
+    ERC721 public nftAddress;
     uint256 public tokenId;
 
     struct Bid {
@@ -54,21 +54,16 @@ contract Vault is IERC721Receiver {
       uint256 _tokenId,
       bytes calldata _data
     ) external override returns (bytes4) {
-      nftAddress = msg.sender;
+      nftAddress = ERC721(msg.sender);
       tokenId = _tokenId;
       return 0x150b7a02;
     }
 
     // 3. Owner Withdraw Assets    @ Maks
     // Should work if Vault is OPEN or CLOSED
-    event safeTransferFrom(
-      address _operator,
-      address owner,
-      uint256 _tokenId
-    );
 
     function WithdrawAsset() external OnlyOwner {
-      emit safeTransferFrom(address(this), owner, tokenId);
+      nftAddress.safeTransferFrom(address(this), owner, tokenId);
     }
 
     // 4.  Publish Vault  @ Josh
