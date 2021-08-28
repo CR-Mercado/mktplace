@@ -4,15 +4,13 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
-
-  contract Vault is IERC721Receiver {
+contract Vault is IERC721Receiver {
     address payable public owner; // publicly visible owner of the Vault who gets paid by winner
     uint256 highestLiveBid;
     address public highestLiveBidder; //highest bidder among all bidders
     uint256 public debt; // for when user takes loans
-    ERC721 public nftAddress;
+    address public nftAddress;
     uint256 public tokenId;
-
 
     struct Bid {
         address bidderAddress;
@@ -50,30 +48,27 @@ import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
     // 2. Add Assets @ Maks
     // Backup plan: write this so that vault owner can add ETH
-
-    function AddAsset(address _nftAddress, uint256 _id) external OnlyOwner {
-        ERC721 nftAddress = ERC721(_nftAddress); 
-        nftAddress.safeTransferFrom(msg.sender, address(this), _id);
-    }
-
-    function onERC721Received (
+    function onERC721Received(
       address _operator,
-        address _from,
+      address _from,
       uint256 _tokenId,
       bytes calldata _data
     ) external override returns (bytes4) {
-      nftAddress = ERC721(msg.sender);
+      nftAddress = msg.sender;
       tokenId = _tokenId;
       return 0x150b7a02;
     }
 
-
     // 3. Owner Withdraw Assets    @ Maks
     // Should work if Vault is OPEN or CLOSED
+    event safeTransferFrom(
+      address _operator,
+      address owner,
+      uint256 _tokenId
+    );
 
-    function WithdrawAsset(address _nftAddress, uint256 _id) external OnlyOwner {
-      ERC721 THEnftAddress = ERC721(_nftAddress);
-      THEnftAddress.safeTransferFrom(address(this), msg.sender, _id);
+    function WithdrawAsset() external OnlyOwner {
+      emit safeTransferFrom(address(this), owner, tokenId);
     }
 
     // 4.  Publish Vault  @ Josh
@@ -291,10 +286,16 @@ import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
         
         emit LoanTransferred(msg.sender, highestLiveBidder, highestLiveBid);
     }
-
     // 9. Owner Pays loan - @ Marc
     // Require Vault be status LoanOutstanding
     // reduce debt as needed
-    // Change to Published IF ALL debt is paid (change to Closed)
-    function payLoan() external OnlyOwner {}
+    // Change to Published IF ALL debt is paid 
+    function payLoan() payable external OnlyOwner {
+        require(vaultStatus == VState.LoanOutstanding, "Loan needs to be outstanding");
+        require(msg.value <= debt, "Don't over-pay your loan: payment amt should be <= outstanding debt");
+        if (msg.value == debt) 
+           {vaultStatus = VState.Published;}
+
+        debt -= msg.value;
+    }
 } // end contract
