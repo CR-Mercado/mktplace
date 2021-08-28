@@ -281,6 +281,6 @@ contract Vault is IERC721Receiver {
     // 9. Owner Pays loan - @ Marc
     // Require Vault be status LoanOutstanding
     // reduce debt as needed
-    // Change to Published IF ALL debt is paid
+    // Change to Published IF ALL debt is paid (change to Closed)
     function payLoan() external OnlyOwner {}
 } // end contract
