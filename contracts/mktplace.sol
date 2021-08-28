@@ -1,14 +1,14 @@
 //SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.0;
 
-import "https://github.com/0xcert/ethereum-erc721/src/contracts/tokens/erc721-token-receiver.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
-contract Vault is ERC721TokenReceiver {
+contract Vault is IERC721Receiver {
     address payable public owner; // publicly visible owner of the Vault who gets paid by winner
     uint256 highestLiveBid;
     address public highestLiveBidder; //highest bidder among all bidders
     uint256 public debt; // for when user takes loans
-    ERC721 public nftAddress;
+    address public nftAddress;
     uint256 public tokenId;
 
     struct Bid {
@@ -52,8 +52,8 @@ contract Vault is ERC721TokenReceiver {
       address _from,
       uint256 _tokenId,
       bytes calldata _data
-    ) external overrride returns (bytes4) {
-      nftAddress = ERC721(msg.sender);
+    ) external returns (bytes4) {
+      nftAddress = msg.sender;
       tokenId = _tokenId;
       return 0x150b7a02;
     }
