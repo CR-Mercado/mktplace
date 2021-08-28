@@ -1,30 +1,6 @@
 //SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.0;
 
-contract VaultCreator {
-    address public MktplaceAdmin; // public state variable automatically has getter function
-    Vault[] public deployedVaults; // public array automatically has getter function
-
-    constructor() {
-        MktplaceAdmin = msg.sender; //  Contract Administrator, not new Vault owner
-    }
-
-    /*1. User Makes a Vault*/
-    function createVault() public {
-        Vault new_vault_address = new Vault(msg.sender); // pass caller to Vault constructor as eoa; makes them owner of a their Vault
-        deployedVaults.push(new_vault_address); // track these Vaults
-    }
-
-    // Carlos: made this, but not sure if we'll need it, was trying to test something
-    modifier OnlyMktplaceAdmin() {
-        require(
-            msg.sender == MktplaceAdmin,
-            "Only Mktplace Administrators can use this function"
-        );
-        _;
-    }
-}
-
 contract Vault {
     address payable public owner; // publicly visible owner of the Vault who gets paid by winner
     uint256 public numLiveBids; //increment this when bids come in and when withdraws happen
