@@ -1,6 +1,7 @@
 //SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.0;
 
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
 contract Vault is IERC721Receiver {
@@ -60,7 +61,15 @@ contract Vault is IERC721Receiver {
 
     // 3. Owner Withdraw Assets    @ Maks
     // Should work if Vault is OPEN or CLOSED
-    function WithdrawAsset() external OnlyOwner {}
+    event safeTransferFrom(
+      address _operator,
+      address owner,
+      uint256 _tokenId
+    );
+
+    function WithdrawAsset() external OnlyOwner {
+      emit safeTransferFrom(address(this), owner, tokenId);
+    }
 
     // 4.  Publish Vault  @ Josh
     // Vault must be Open
