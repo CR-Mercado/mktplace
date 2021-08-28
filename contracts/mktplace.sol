@@ -92,7 +92,6 @@ contract Vault {
             vaultStatus == VState.LoanOutstanding,
             "No loans outstanding on this vault."
         );
-
         /*If there is debt, make vault LiquidationEligible*/
         if (_debt == 0) {
             vaultStatus = VState.Published;
@@ -124,7 +123,7 @@ contract Vault {
     }
 
     // Withdraw Bid
-    function withdrawBid() external {
+    function withdrawBid() public {
         require(
             block.number >= BidderBids[msg.sender].endBlock,
             "Your bid has not expired."
@@ -174,8 +173,8 @@ contract Vault {
 
         Bid memory Bobby = Bid({
             bidderAddress: bobby_address,
-            startBlock: block.number,
-            endBlock: block.number + 10,
+            startBlock: block.number - 5,
+            endBlock: block.number - 1,
             amount: 1000
         });
 
@@ -204,12 +203,29 @@ contract Vault {
         BidderBids[suzie_address] = Suzie;
     }
 
-    function loadFakeBids() external payable {
-        require(
-            msg.value == 1500,
-            "You need to fund the fake bids to keep the contract balance intact."
-        );
-        PlaceFakeBids();
+    modifier onlyBobby() { 
+    require(msg.sender == 0x5B38Da6a701c568545dCfcB03FcB875f56beddC4, "Only Bobby's wallet can call this function");
+    _;
+    }
+
+    function testWithdrawal() payable external onlyBobby returns(bool) {
+        // load bobby and suzie's funding ahead of time 
+        // add their bids 
+        // change vault to loanOutstanding 
+        // use bobby's address to withdraw
+        // his acccount balance should NOT change, instead he becomes owner 
+        require(msg.value == 1500, "You need to fund the fake bids to keep the contract balance intact.");
+
+        PlaceFakeBids(); // bobby becomes HLB
+        if(debt > 0){
+        vaultStatus = VState.LoanOutstanding;
+        }
+        withdrawBid();
+        if(owner == 0x5B38Da6a701c568545dCfcB03FcB875f56beddC4){
+            return(true);
+        } else {
+            return(false);
+        }
     }
 
     // 8. Owner Takes a loan @ Vivien

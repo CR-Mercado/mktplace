@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.0;
 
-import "./main.sol";
+import "./mktplace.sol";
 
 contract VaultCreator {
     address public MktplaceAdmin; // public state variable automatically has getter function
