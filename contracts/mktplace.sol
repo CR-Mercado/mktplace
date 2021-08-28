@@ -104,7 +104,11 @@ contract Vault is IERC721Receiver {
 
         BidderBids[msg.sender] = newBid;
 
-        // IF msg.value > highestLiveBid update highestLiveBid & highestLiveBidder - @ Marc
+        if (msg.value > highestLiveBid) {
+            highestLiveBid = msg.value;
+            highestLiveBidder = msg.sender;
+        }
+
     }
 
     // 7. Bidder Request Withdrawal  @ Carlos
