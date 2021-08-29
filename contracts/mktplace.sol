@@ -1,6 +1,7 @@
 //SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.0;
 
+// ON WINDOWS THESE DO NOT IMPORT -- Ignore if using REMIX
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
@@ -47,11 +48,18 @@ contract Vault is IERC721Receiver {
     }
 
 
- function AddAsset(address _nftAddress, uint256 _id) external OnlyOwner {
-        ERC721 nftAddress = ERC721(_nftAddress); 
-        nftAddress.safeTransferFrom(msg.sender, address(this), _id);
+/*  
+Learned that NFTs cannot be approved & transferred within a function call! 
+
+notRun{ 
+    function AddAsset(address _nftAddress, uint256 _id) external OnlyOwner {
+            ERC721 NFT = ERC721(_nftAddress); 
+            NFT.approve(address(this), _id);
+            NFT.safeTransferFrom(msg.sender, address(this), _id);
+        }
     }
-    
+*/
+
     // 2. Add Assets @ Maks
     // Backup plan: write this so that vault owner can add ETH
     function onERC721Received(
@@ -74,8 +82,8 @@ contract Vault is IERC721Receiver {
     );
 
     function WithdrawAsset(address _nftAddress, uint256 _id) external OnlyOwner {
-      ERC721 THEnftAddress = ERC721(_nftAddress);
-      THEnftAddress.safeTransferFrom(address(this), msg.sender, _id);
+      ERC721 NFT = ERC721(_nftAddress);
+      NFT.safeTransferFrom(address(this), msg.sender, _id);
     }
 
     // 4.  Publish Vault  @ Josh
@@ -302,11 +310,14 @@ contract Vault is IERC721Receiver {
     // reduce debt as needed
     // Change to Published IF ALL debt is paid 
     function payLoan() payable external OnlyOwner {
-        require(vaultStatus == VState.LoanOutstanding, "Loan needs to be outstanding");
-        require(msg.value <= debt, "Don't over-pay your loan: payment amt should be <= outstanding debt");
-        if (msg.value == debt) 
-           {vaultStatus = VState.Published;}
-
-        debt -= msg.value;
+        require(vaultStatus == VState.LoanOutstanding, "There is no loan to pay back.");
+        
+        if (msg.value >= debt) {
+            vaultStatus = VState.Published;
+            debt = 0;
+        } else { 
+          debt -= msg.value;  
+        }
+        
     }
 } // end contract
