@@ -46,6 +46,12 @@ contract Vault is IERC721Receiver {
         _;
     }
 
+
+ function AddAsset(address _nftAddress, uint256 _id) external OnlyOwner {
+        ERC721 nftAddress = ERC721(_nftAddress); 
+        nftAddress.safeTransferFrom(msg.sender, address(this), _id);
+    }
+    
     // 2. Add Assets @ Maks
     // Backup plan: write this so that vault owner can add ETH
     function onERC721Received(
@@ -71,7 +77,7 @@ contract Vault is IERC721Receiver {
       ERC721 THEnftAddress = ERC721(_nftAddress);
       THEnftAddress.safeTransferFrom(address(this), msg.sender, _id);
     }
-    
+
     // 4.  Publish Vault  @ Josh
     // Vault must be Open
     // Optional: Vault must have stuff in it
